@@ -8,7 +8,6 @@ export class App extends Component {
     super(props);
     this.state={
       city_name:"",
-      type:"",
       lat:"",
       lon:"",
       showData:false
@@ -25,7 +24,8 @@ export class App extends Component {
     e.preventDefault();
     let config={
       method:"GET",
-      baseURL:`https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_LOCATIONIQ_API_KEY}&q=${this.state.city_name}`
+      baseURL:`https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_LOCATIONIQ_API_KEY}&q=${this.state.city_name}&format=json
+      `
       }
     axios(config).then(res=>{
       let responseData=res.data[0]
@@ -33,7 +33,6 @@ export class App extends Component {
         city_name:responseData.display_name,
         lon:responseData.lon,
         lat:responseData.lat,
-        type:responseData.type,
         showData:true
 
       })
@@ -47,7 +46,6 @@ export class App extends Component {
         {
           this.state.showData&&
           <Location city_name={this.state.city_name}
-                    type={this.state.type}
                     lat={this.state.lat}
                     lon={this.state.lon}
           />

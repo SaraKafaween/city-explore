@@ -10,6 +10,7 @@ export class App extends Component {
       city_name:"",
       lat:"",
       lon:"",
+      map: "",
       showData:false
     }
   }
@@ -33,6 +34,7 @@ export class App extends Component {
         city_name:responseData.display_name,
         lon:responseData.lon,
         lat:responseData.lat,
+
         showData:true
 
       })
@@ -48,6 +50,7 @@ export class App extends Component {
           <Location city_name={this.state.city_name}
                     lat={this.state.lat}
                     lon={this.state.lon}
+                    
           />
         }
       </div>

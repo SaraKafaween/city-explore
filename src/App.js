@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import axios from 'axios';
 import Location from './components/Location';
 import SearchForm from './components/SearchForm';
+import Weather from './components/Weather';
 
 export class App extends Component {
   constructor(props){
@@ -11,7 +12,9 @@ export class App extends Component {
       lat:"",
       lon:"",
       map: "",
-      showData:false
+      showData:false,
+      weatherInfo:[],
+      error:""
     }
   }
   handleLocation=(e)=>{
@@ -29,7 +32,7 @@ export class App extends Component {
       `
       }
     axios(config).then(res=>{
-      let responseData=res.data[0]
+      let responseData=res.data[0];     
       this.setState({
         city_name:responseData.display_name,
         lon:responseData.lon,
@@ -37,9 +40,21 @@ export class App extends Component {
 
         showData:true
 
-      })
-    })
-  }
+      }) })
+    // }).then(()=>{
+       axios.get(`http://localhost:3020/weather?searchQuery=${this.state.city_name}&lon=${this.state.lon}&lat=${this.state.lat}`).then(res=>{
+        this.setState({
+          weatherInfo:res.data,
+          showData: true
+        })
+    //   })
+      }).catch(error=>{
+        this.setState({
+          error :error.message
+        })
+     
+  })
+}
   render() {
     return (
       <div>
@@ -50,9 +65,16 @@ export class App extends Component {
           <Location city_name={this.state.city_name}
                     lat={this.state.lat}
                     lon={this.state.lon}
-                    
+
           />
         }
+
+        {this.state.showData&&
+          <Weather weatherInfo={this.state.weatherInfo}
+          />}
+          
+          {/* </> */}
+        {/* })} */}
       </div>
     )
   }

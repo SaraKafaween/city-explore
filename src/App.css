@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+Form.Control{
+  width: 50%;
+}
+p{
+  font-size: 1rem;
+}
+.body{
+  background-color:black;
+}

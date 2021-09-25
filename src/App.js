@@ -1,83 +1,128 @@
-import React, { Component } from 'react'
 import axios from 'axios';
-import Location from './components/Location';
-import SearchForm from './components/SearchForm';
-import Weather from './components/Weather';
+import React, { Component } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import Card from 'react-bootstrap/Card';
+import './App.css';
+import Alert from 'react-bootstrap/Alert';
+import Weather from './Weather';
+import Movies from './Movies';
+import Restaurants from './Restaurants';
+import Header from './components/Header';
 
 export class App extends Component {
-  constructor(props){
+  constructor(props) {
     super(props);
-    this.state={
-      city_name:"",
-      lat:"",
-      lon:"",
-      map: "",
-      showData:false,
-      weatherInfo:[],
-      error:""
-    }
+    this.state = {
+      locationData: {},
+      errorMsg: '',
+      displayLocation: false,
+      showWeather: true,
+      showMovie: true,
+    };
   }
-  handleLocation=(e)=>{
-    let city_name=e.target.value;
-    this.setState({
-      city_name:city_name
-    })
-  }
-  handleSubmit=(e)=>{
-    console.log(`${process.env.REACT_APP_LOCATIONIQ_API_KEY}`);
+
+  submitForm = async (e) => {
     e.preventDefault();
-    let config={
-      method:"GET",
-      baseURL:`https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_LOCATIONIQ_API_KEY}&q=${this.state.city_name}&format=json
-      `
-      }
-    axios(config).then(res=>{
-      let responseData=res.data[0];     
+    try {
+      const city = e.target.cityName.value;
+      const response = await axios.get(
+        `https://us1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_KEY}&q=${city}&format=json`
+      );
+      const locationIqData = response.data[0];
+      const cityName = locationIqData.display_name.split(',')[0];
+      const weatherResponse = await axios.get(
+        `${process.env.REACT_APP_SERVER_URL}/weather?searchQuery=${cityName}&lat=${locationIqData.lat}&lon=${locationIqData.lon}`
+      );
+
+      const movieResponce = await axios.get(
+        `${process.env.REACT_APP_SERVER_URL}/movies?query=${city}`
+      );
+        const restRepsone = await axios.get(
+          `${process.env.REACT_APP_SERVER_URL}/yelp?location=${city}`
+        );
       this.setState({
-        city_name:responseData.display_name,
-        lon:responseData.lon,
-        lat:responseData.lat,
-
-        showData:true
-
-      }) })
-    // }).then(()=>{
-       axios.get(`http://localhost:3020/weather?searchQuery=${this.state.city_name}&lon=${this.state.lon}&lat=${this.state.lat}`).then(res=>{
-        this.setState({
-          weatherInfo:res.data,
-          showData: true
-        })
-    //   })
-      }).catch(error=>{
-        this.setState({
-          error :error.message
-        })
-     
-  })
-}
+        locationData: locationIqData,
+        errorMsg: '',
+        displayLocation: true,
+        weatherData: weatherResponse.data,
+        movieData: movieResponce.data,
+        restaurantData : restRepsone.data,
+      });
+    } catch (error) {
+      this.setState({
+        errorMsg: error.message,
+        displayLocation: false,
+        showWeather: false,
+        showMovie: false,
+        movieData: error.response,
+      });
+      // console.log(error.message)
+    }
+  };
   render() {
     return (
-      <div>
-        <h1>Welcome to City explorer</h1>
-        <SearchForm handleLocation={this.handleLocation} handleSubmit={this.handleSubmit}/>
-        {
-          this.state.showData&&
-          <Location city_name={this.state.city_name}
-                    lat={this.state.lat}
-                    lon={this.state.lon}
+      <div className="body">
+        <center>
+          <Header/>
+          <Form onSubmit={this.submitForm}>
+            <Form.Group className='mb-3' controlId='exampleForm.ControlInput1'>
+              <Form.Control
+                style={{ width: '50%',margin: '50px 20px' }}
+                type='text'
+                placeholder='Enter The City Name'
+                name='cityName'
+              />
+            </Form.Group>
+            <Button type='submit'>Explore!</Button>
+            {this.state.errorMsg && 
+              <Alert key={1} variant={'danger'}>
+                {this.state.errorMsg}
+              </Alert>
+            }
+          </Form>
+        </center>
+        <center>
+          <br />
+          {this.state.displayLocation && (
+            <div>
+              <Card style={{ width: '25rem' }}>
+                <Card.Img
+                  variant='top'
+                  src={`https://maps.locationiq.com/v3/staticmap?key=pk.b0acd25fa217904d671efabb56c53d66&q&center=${this.state.locationData.lat},${this.state.locationData.lon}&zoom=15`}
+                />
+                <Card.Body>
+                  <Card.Title>Location information</Card.Title>
+                  <Card.Text>{this.state.locationData.display_name}</Card.Text>
+                  <Card.Text>Longitude:{this.state.locationData.lon}</Card.Text>
+                  <Card.Text>Latitude:{this.state.locationData.lon}</Card.Text>
+                </Card.Body>
+              </Card>
 
-          />
-        }
-
-        {this.state.showData&&
-          <Weather weatherInfo={this.state.weatherInfo}
-          />}
-          
-          {/* </> */}
-        {/* })} */}
+              <div>
+              {this.state.showWeather && 
+                <Weather
+                  weatherData={this.state.weatherData}
+                />
+              }
+              </div>
+              <div>
+                {this.state.showMovie && 
+                  <Movies movieData={this.state.movieData} />
+                }
+              </div>
+              <div>
+              {this.state.showMovie && 
+                  <Restaurants restaurantData={this.state.restaurantData} />
+                }
+              </div>
+            </div>
+          )}
+        </center>
       </div>
-    )
+    );
   }
 }
 
-export default App
+export default App;
